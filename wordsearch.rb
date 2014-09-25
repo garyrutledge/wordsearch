@@ -1,16 +1,5 @@
 #!/usr/bin/env ruby
 
-class Array
-    def partial_include?(search)
-        x = []
-        self.each do |e|
-            x << e if search.include?(e.to_s)
-        end
-        x
-    end
-end
-
-
 require 'csv'
 @grid = "./grid.csv"
 @dictionary = "./dict.txt"
@@ -52,14 +41,18 @@ def retrieve_words_from_grid
     horizontal_l_to_r_words
 end
 
-def partial_matches(grid_word)
-    @lookup_array.partial_include?(grid_word)
+def partial_include?(reference_array, input_string)
+    x = []
+    reference_array.each do |e|
+        x << e if input_string.include?(e.to_s)
+    end
+    x
 end
 
 def find_dictionary_words(grid_words)
     matched_words = []
     grid_words.each do |grid_word|
-        matched_words << partial_matches(grid_word) if @lookup_array.partial_include?(grid_word)
+        matched_words << partial_include?(@lookup_array,grid_word) if partial_include?(@lookup_array,grid_word)
     end
     matched_words
 end
