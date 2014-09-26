@@ -2,9 +2,8 @@
 class Wordsearch
     def initialize
         require 'csv'
-        @grid = "./grid.csv"
         @dictionary = "./dict.txt"
-        @word_length = 8
+        @word_length = 10
         Dir.chdir(File.dirname(__FILE__))
     end
 
@@ -13,10 +12,12 @@ class Wordsearch
     end
 
     def generate_grid
-        CSV.open(@grid, 'w') do |output_csv|
+        grid_path = "./grid.csv"
+        CSV.open(grid_path, 'w') do |output_csv|
             @word_length.times do
                 output_csv << Array.new(@word_length) { random_char }
             end
+        grid_path
         end
 
     end
@@ -27,16 +28,17 @@ class Wordsearch
     end
 
     def cleanse_dictionary
-        @lookup_array = []
+        lookup_array = []
         File.open(@dictionary).each do |line|
             dictionary_word = retrieve_first_word(line)
-            @lookup_array << dictionary_word unless dictionary_word.size > @word_length
+            lookup_array << dictionary_word unless dictionary_word.size > @word_length
         end
+        lookup_array
     end
 
-    def retrieve_words_from_grid
+    def retrieve_words_from_grid(grid_path)
         horizontal_l_to_r_words = []
-        CSV.read(@grid).each do |row|
+        CSV.read(grid_path).each do |row|
             horizontal_l_to_r_words << row.join(",").gsub(",", "")
         end
         horizontal_l_to_r_words
@@ -50,10 +52,10 @@ class Wordsearch
         x
     end
 
-    def find_dictionary_words(grid_words)
+    def find_dictionary_words(grid_words, lookup_array)
         matched_words = []
         grid_words.each do |grid_word|
-            matched_words << partial_include?(@lookup_array, grid_word) if partial_include?(@lookup_array, grid_word)
+            matched_words << partial_include?(lookup_array, grid_word) if partial_include?(lookup_array, grid_word)
         end
         matched_words
     end
@@ -100,18 +102,18 @@ class Wordsearch
     end
 
     def main
-        generate_grid
-        cleanse_dictionary
+        grid_path = generate_grid
+        lookup_array = cleanse_dictionary
 
-        horizontal_l_to_r = retrieve_words_from_grid
+        horizontal_l_to_r = retrieve_words_from_grid(grid_path)
         horizontal_r_to_l = transform_lr_to_rl(horizontal_l_to_r)
         vertical_l_to_r = transform_vertically(horizontal_l_to_r)
         vertical_r_to_l = transform_lr_to_rl(vertical_l_to_r)
 
-        horizontal_l_to_r_matches = find_dictionary_words(horizontal_l_to_r)
-        horizontal_r_to_l_matches = find_dictionary_words(horizontal_r_to_l)
-        vertical_l_to_r_matches = find_dictionary_words(vertical_l_to_r)
-        vertical_r_to_l_matches = find_dictionary_words(vertical_r_to_l)
+        horizontal_l_to_r_matches = find_dictionary_words(horizontal_l_to_r, lookup_array)
+        horizontal_r_to_l_matches = find_dictionary_words(horizontal_r_to_l, lookup_array)
+        vertical_l_to_r_matches = find_dictionary_words(vertical_l_to_r, lookup_array)
+        vertical_r_to_l_matches = find_dictionary_words(vertical_r_to_l, lookup_array)
 
         write_results_to_file(horizontal_l_to_r, horizontal_l_to_r_matches, horizontal_r_to_l_matches,
                               vertical_l_to_r_matches, vertical_r_to_l_matches)
